@@ -5,6 +5,14 @@
 
 ---
 
+## 🔄 Technical Sequence Workflow
+
+This sequence diagram illustrates the lifecycle of a chat upload, showcasing how the main thread delegates heavy processing to the background worker to ensure UI responsiveness.
+
+![Wali Technical Workflow](./sequence-diagram.png)
+
+---
+
 ## 🔒 Privacy First by Design
 Unlike online parsers, **no chat data is ever uploaded to a server**. 
 - The text file parsing, emoji processing, and statistical analytics are computed entirely on your local machine using client-side **Web Workers**.
@@ -35,70 +43,6 @@ Visualize the statistics of your conversation:
 - **Top Emojis**: Frequency list displaying the most commonly sent emojis globally.
 - **Member Roster Statistics**: Detailed report cards for each member indicating word counts, shared media counts, links shared, and average words per message.
 
-
-
----
-
-## 🔄 Technical Sequence Workflow
-
-This sequence diagram illustrates the lifecycle of a chat upload, showcasing how the main thread delegates heavy processing to the background worker to ensure UI responsiveness.
-
-```mermaid
-%%{init: {
-  "theme": "base",
-  "themeVariables": {
-    "primaryColor": "#ffffff",
-    "primaryBorderColor": "#d1d5db",
-    "primaryTextColor": "#111827",
-    "lineColor": "#6b7280",
-    "secondaryColor": "#f8fafc",
-    "tertiaryColor": "#ffffff",
-    "actorBorder": "#d1d5db",
-    "actorBkg": "#ffffff",
-    "actorTextColor": "#111827",
-    "activationBorderColor": "#d1d5db",
-    "activationBkgColor": "#f8fafc"
-  }
-}}%%
-
-sequenceDiagram
-    autonumber
-
-    actor User as User
-    participant UI as UploadArea (Main UI Thread)
-    participant Worker as analyzer.worker.ts (Background)
-    participant Store as Zustand (appStore)
-    participant Dash as Dashboard & ChatView
-
-    User->>UI: Drag & Drop chat.txt File
-    UI->>Store: startAnalysis() (Set loading state to true)
-    UI->>UI: Read file as Text string
-    UI->>Worker: postMessage({ action: "parseAndAnalyze", text })
-
-    rect rgba(248,250,252,0.8)
-        note right of Worker: Web Worker starts processing in separate thread
-        Worker->>Worker: Loop & Regex match lines (0% - 50%)
-        Worker-->>UI: progress update (0-50%)
-        UI->>Store: setProgress(progress)
-    end
-
-    rect rgba(241,245,249,0.8)
-        note right of Worker: Compute analytics, participants & emoji stats
-        Worker->>Worker: Compute Metrics (50% - 100%)
-        Worker-->>UI: progress update (51-100%)
-        UI->>Store: setProgress(progress)
-    end
-
-    Worker-->>UI: success(messages, stats)
-    UI->>Store: setMessages(messages)
-    UI->>Store: setStats(stats)
-
-    UI->>Worker: worker.terminate()
-    Store-->>Dash: Render dashboard & virtualized chat list
-    Dash-->>User: Analytics and Chat Inspector ready
-```
-
----
 
 ## 🛠️ Tech Stack
 - **Framework**: Next.js 16 (App Router, Client-Component Architecture)
